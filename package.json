@@ -15,7 +15,7 @@
     "notes-sharing",
     "fullstack"
   ],
-  "author": "Your Name",
+  "author": "Ashish Phapale",
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^3.0.3",
