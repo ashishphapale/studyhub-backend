@@ -17,14 +17,25 @@ const app = express();
 // Middleware
 app.use(express.json({ limit: "10mb" }));
 
-// ✅ CORS for Netlify + Localhost
+// ✅ FIXED CORS FOR NETLIFY + LOCALHOST
+const allowedOrigins = [
+  "https://ashishstudyhub.netlify.app", // ✅ your Netlify frontend
+  "http://localhost:5500",              // local dev (Live Server)
+  "http://127.0.0.1:5500",
+];
+
 app.use(
   cors({
-    origin: [
-      "https://studyhub-frontend.netlify.app", // your deployed frontend
-      "http://localhost:5500", // local dev
-      "http://127.0.0.1:5500",
-    ],
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps, curl, Postman)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        console.warn("🚫 CORS blocked request from:", origin);
+        return callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
@@ -34,7 +45,7 @@ app.use(morgan("dev"));
 app.use(compression());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Basic route test
+// ✅ Basic route test
 app.get("/", (req, res) => {
   res.status(200).json({
     message: "✅ StudyHub Backend is Running!",
@@ -43,24 +54,32 @@ app.get("/", (req, res) => {
   });
 });
 
-// Routes
+// ✅ Routes
 const authRoutes = require("./routes/authRoutes");
 const noteRoutes = require("./routes/noteRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/notes", noteRoutes);
 
-// 404 Handler
+// ✅ 404 Handler
 app.use((req, res) => {
-  res.status(404).json({ message: "Route not found", path: req.originalUrl });
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+    path: req.originalUrl,
+  });
 });
 
-// Global Error Handler
+// ✅ Global Error Handler
 app.use((err, req, res, next) => {
-  console.error("🔥 Server Error:", err);
-  res.status(500).json({ message: "Internal Server Error", error: err.message });
+  console.error("🔥 Server Error:", err.message);
+  res.status(500).json({
+    success: false,
+    message: "Internal Server Error",
+    error: err.message,
+  });
 });
 
-// Server start
+// ✅ Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
