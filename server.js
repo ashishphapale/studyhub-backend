@@ -1,3 +1,6 @@
+// =========================
+// Import Dependencies
+// =========================
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
@@ -7,10 +10,14 @@ const compression = require("compression");
 const path = require("path");
 const connectDB = require("./config/db");
 
-// Load environment variables
+// =========================
+// Load Environment Variables
+// =========================
 dotenv.config();
 
+// =========================
 // Connect MongoDB
+// =========================
 connectDB();
 
 const app = express();
@@ -18,23 +25,34 @@ const app = express();
 // =========================
 // Middleware Configuration
 // =========================
-app.use(express.json({ limit: "10mb" })); // handle large JSON bodies safely
-app.use(cors({
-  origin: ["http://localhost:5500", "http://127.0.0.1:5500"], // adjust for frontend dev server
-  credentials: true,
-}));
+app.use(express.json({ limit: "10mb" })); // handle large JSON safely
+
+// ✅ CORS Setup — Allow both Local Dev & Deployed Frontend
+app.use(
+  cors({
+    origin: [
+      "https://studyhub-frontend.netlify.app", // ✅ your deployed frontend
+      "http://localhost:5500", // ✅ for local testing
+      "http://127.0.0.1:5500"
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
+
 app.use(helmet());
 app.use(morgan("dev"));
-app.use(compression()); // improves performance
+app.use(compression());
 app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // serve uploaded files
 
 // =========================
-// Basic Route
+// Basic Route (Health Check)
 // =========================
 app.get("/", (req, res) => {
   res.status(200).json({
-    message: "✅ StudyHub Backend is Running!",
-    status: "OK",
+    message: "✅ StudyHub Backend is Running Successfully!",
+    environment: process.env.NODE_ENV || "development",
     timestamp: new Date().toISOString(),
   });
 });
@@ -66,7 +84,7 @@ app.use((err, req, res, next) => {
   console.error("🔥 Server Error:", err.stack);
   res.status(err.status || 500).json({
     success: false,
-    message: err.message || "Server Error",
+    message: err.message || "Internal Server Error",
   });
 });
 
